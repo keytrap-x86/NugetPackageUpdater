@@ -15,11 +15,14 @@ namespace NugetPackageUpdater
 
     public class Options
     {
-        [Option('c', "current", Required = false, HelpText = "Current package name (MyPackage.1.0.1.nupkg)")]
+        [Option('c', "current", Required = true, HelpText = "Current package name (MyPackage.1.0.1.nupkg)")]
         public string CurrentPackageName { get; set; }
 
-        [Option('n', "new", Required = false, HelpText = "New package name (MyPackage.1.0.2.nupkg)")]
+        [Option('n', "new", Required = true, HelpText = "New package name (MyPackage.1.0.2.nupkg)")]
         public string NewPackageName { get; set; }
+
+        [Option('x', "ignored-extensions", Required = false, HelpText = "Excluded file extensions eg: *.xml,*.pdb", Separator = ',', Default = new [] { "xml", "pdb"})]
+        public IEnumerable<string> IgnoredExtensions { get; set; }
     }
 
     class Program
@@ -31,14 +34,14 @@ namespace NugetPackageUpdater
         public static string CurrentPackageFullName;
         public static string NewPackageFullName;
         public static string TempPackageExtractDir;
-        public static string[] ExcludeExtensions = { "xml", "pdb" };
+        
         public static string LibNetVersion;
         public static string LibNetDir;
         public static string NuspecFile;
 
         static void Main(string[] args)
         {
-            Console.WriteLine(string.Join(" ", args));
+            Log(string.Join(" ", args));
             try
             {
                 Parser.Default.ParseArguments<Options>(args).WithParsed(o => Options = o);
@@ -49,17 +52,20 @@ namespace NugetPackageUpdater
                 TempPackageExtractDir = Path.Combine(ReleasesDir, Options.CurrentPackageName);
                 
 
+
                 if (Directory.Exists(TempPackageExtractDir))
                 {
                     Directory.Delete(TempPackageExtractDir, true);
                 }
 
                 // Extract current package
-                Console.WriteLine($"Extracting {Options.CurrentPackageName} to {TempPackageExtractDir} ...");
+                Log($"Extracting {Options.CurrentPackageName} to {TempPackageExtractDir} ...");
+                
                 ZipFile.ExtractToDirectory(CurrentPackageFullName, TempPackageExtractDir, Encoding.UTF8);
                 LibNetVersion = Directory.EnumerateDirectories(Path.Combine(TempPackageExtractDir, "lib")).FirstOrDefault();
                 LibNetVersion = new DirectoryInfo(LibNetVersion).Name;
-                Console.WriteLine($"Lib .net version : {LibNetVersion}");
+
+                Log($"Lib .net version : {LibNetVersion}");
                 LibNetDir = Path.Combine(TempPackageExtractDir, "lib", LibNetVersion);
 
                 if (!Directory.Exists(LibNetDir))
@@ -74,7 +80,7 @@ namespace NugetPackageUpdater
                         "*",
                         SearchOption.AllDirectories)
                     // ReSharper disable once PossibleNullReferenceException
-                    .Where(f => !ExcludeExtensions.Any(exc => Path.GetExtension(f)
+                    .Where(f => !Options.IgnoredExtensions.Any(exc => Path.GetExtension(f)
                         .Contains(exc)));
 
 
@@ -98,6 +104,9 @@ namespace NugetPackageUpdater
                 var newVersion = Regex.Match(Path.GetFileName(NewPackageFullName), @"([0-9].[0-9].[0-9]+)").Groups[1]
                     .Value;
 
+
+                Log($"Updating {NuspecFile} file");
+
                 UpdateNuspec(NuspecFile, newVersion);
 
                 if (File.Exists(NewPackageFullName))
@@ -112,7 +121,7 @@ namespace NugetPackageUpdater
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Log(e.Message);
                 Console.ReadLine();
             }
         }
@@ -132,6 +141,12 @@ namespace NugetPackageUpdater
 
 
             doc.Save(NuspecFile);
+        }
+
+        public static void Log(object s)
+        {
+            var str = $"[{DateTime.Now:T}] : {s}";
+            Console.WriteLine(str);
         }
     }
 }
