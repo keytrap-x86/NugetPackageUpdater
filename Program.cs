@@ -55,16 +55,20 @@ namespace NugetPackageUpdater
                 }
 
                 // Extract current package
-                Console.WriteLine($"Extracting {Options.CurrentPackageName} ...");
+                Console.WriteLine($"Extracting {Options.CurrentPackageName} to {TempPackageExtractDir} ...");
                 ZipFile.ExtractToDirectory(CurrentPackageFullName, TempPackageExtractDir, Encoding.UTF8);
-                LibNetVersion = Directory.EnumerateDirectories(Path.Combine(TempPackageExtractDir, "lib"))
-                    .FirstOrDefault();
-
+                LibNetVersion = Directory.EnumerateDirectories(Path.Combine(TempPackageExtractDir, "lib")).FirstOrDefault();
+                LibNetVersion = new DirectoryInfo(LibNetVersion).Name;
                 Console.WriteLine($"Lib .net version : {LibNetVersion}");
                 LibNetDir = Path.Combine(TempPackageExtractDir, "lib", LibNetVersion);
 
                 if (!Directory.Exists(LibNetDir))
                     Directory.CreateDirectory(LibNetDir);
+                else
+                {
+                    Directory.Delete(LibNetDir, true);
+                    Directory.CreateDirectory(LibNetDir);
+                }
 
                 var releasedFile = Directory.EnumerateFiles(BinReleaseDir,
                         "*",
@@ -93,9 +97,14 @@ namespace NugetPackageUpdater
 
                 var newVersion = Regex.Match(Path.GetFileName(NewPackageFullName), @"([0-9].[0-9].[0-9]+)").Groups[1]
                     .Value;
+
                 UpdateNuspec(NuspecFile, newVersion);
 
+                if (File.Exists(NewPackageFullName))
+                    File.Delete(NewPackageFullName);
+
                 System.IO.Compression.ZipFile.CreateFromDirectory(TempPackageExtractDir,NewPackageFullName, CompressionLevel.Optimal, false);
+                
                 if (Directory.Exists(TempPackageExtractDir))
                 {
                     Directory.Delete(TempPackageExtractDir, true);
@@ -103,7 +112,8 @@ namespace NugetPackageUpdater
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace); 
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
             }
         }
 
