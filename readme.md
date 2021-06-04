@@ -5,6 +5,8 @@ Usage :
 1. Place the NugetPackageUpdater.exe in the root of your project (where are your .npkg e.g: MyPackage.1.0.1.npg)
 2. Call the exe `NugetPackageUpdater.exe --current MyPackage.1.0.1.npg --new MyPackage.1.0.2.npg --ignored-extensions "xml,pdb"`
 
+The `-i or --ignored-extensions` argument is optional
+
 Behind the scenes :
 
 It will first extract MyPackage.1.0.1.npg in {root}\Releases\MyPackage.1.0.1.npg

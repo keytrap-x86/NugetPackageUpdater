@@ -21,7 +21,7 @@ namespace NugetPackageUpdater
         [Option('n', "new", Required = true, HelpText = "New package name (MyPackage.1.0.2.nupkg)")]
         public string NewPackageName { get; set; }
 
-        [Option('x', "ignored-extensions", Required = false, HelpText = "Excluded file extensions eg: *.xml,*.pdb", Separator = ',', Default = new [] { "xml", "pdb"})]
+        [Option('i', "ignored-extensions", Required = false, HelpText = "Excluded file extensions eg: *.xml,*.pdb", Separator = ',')]
         public IEnumerable<string> IgnoredExtensions { get; set; }
     }
 
@@ -50,8 +50,8 @@ namespace NugetPackageUpdater
                 CurrentPackageFullName = Path.Combine(ProjectRoot, Options.CurrentPackageName);
                 NewPackageFullName = Path.Combine(ProjectRoot, Options.NewPackageName);
                 TempPackageExtractDir = Path.Combine(ReleasesDir, Options.CurrentPackageName);
-                
 
+                Log($"Ignored extensions : {string.Format(", ", Options.IgnoredExtensions)}");
 
                 if (Directory.Exists(TempPackageExtractDir))
                 {
