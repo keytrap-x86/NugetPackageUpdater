@@ -21,7 +21,7 @@ namespace NugetPackageUpdater
         [Option('n', "new", Required = true, HelpText = "New package name (MyPackage.1.0.2.nupkg)")]
         public string NewPackageName { get; set; }
 
-        [Option('i', "ignored-extensions", Required = false, HelpText = "Excluded file extensions eg: *.xml,*.pdb", Separator = ',')]
+        [Option('i', "ignored-extensions", Required = false, HelpText = "Excluded file extensions eg: \"xml, pdb\"", Separator = ',')]
         public IEnumerable<string> IgnoredExtensions { get; set; }
     }
 
@@ -51,6 +51,8 @@ namespace NugetPackageUpdater
                 NewPackageFullName = Path.Combine(ProjectRoot, Options.NewPackageName);
                 TempPackageExtractDir = Path.Combine(ReleasesDir, Options.CurrentPackageName);
 
+                Options.IgnoredExtensions = Options.IgnoredExtensions.Where(i => !string.IsNullOrEmpty(i)).Select(i => $".{i.ToLower().Trim().Replace("'", null)}");
+
                 Log($"Ignored extensions : {string.Format(", ", Options.IgnoredExtensions)}");
 
                 if (Directory.Exists(TempPackageExtractDir))
@@ -76,14 +78,10 @@ namespace NugetPackageUpdater
                     Directory.CreateDirectory(LibNetDir);
                 }
 
-                var releasedFile = Directory.EnumerateFiles(BinReleaseDir,
-                        "*",
-                        SearchOption.AllDirectories)
-                    // ReSharper disable once PossibleNullReferenceException
-                    .Where(f => !Options.IgnoredExtensions.Any(exc => Path.GetExtension(f)
-                        .Contains(exc)));
+                var releasedFile = Directory.EnumerateFiles(BinReleaseDir, "*", SearchOption.AllDirectories)
+                    .Where(f => !Options.IgnoredExtensions.Contains(Path.GetExtension(f)));
 
-
+                
                 // Copy all files to the temp directory
                 releasedFile.ToList().ForEach(f =>
                 {
