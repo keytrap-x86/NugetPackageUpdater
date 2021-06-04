@@ -3,7 +3,7 @@
 Usage :
 
 1. Place the *NugetPackageUpdater.exe* in the root of your project (where are your .npkg e.g: MyPackage.1.0.1.npkg)
-2. Call the exe `NugetPackageUpdater.exe --current MyPackage.1.0.1.npg --new MyPackage.1.0.2.npg --ignored-extensions "xml,pdb"`
+2. Call the exe `NugetPackageUpdater.exe --current MyPackage.1.0.1.npkg --new MyPackage.1.0.2.npkg --ignored-extensions "xml,pdb"`
 
 The `-i or --ignored-extensions` argument is optional
 
